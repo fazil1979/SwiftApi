@@ -134,11 +134,7 @@ var car = Car(
                     )
 )
 
-
-
-
-
-
+ 
 car.model = "Maruti"
 
 
