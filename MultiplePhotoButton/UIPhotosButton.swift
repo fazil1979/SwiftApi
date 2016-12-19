@@ -15,9 +15,9 @@ import UIKit
 
 /*
  
-   Main peupose of this class is to store images in file managers and store paths in array and return that array to delegate class
+ Main peupose of this class is to store images in file managers and store paths in array and return that array to delegate class
  
-*/
+ */
 
 /*
  <key>NSCameraUsageDescription</key>
@@ -32,16 +32,16 @@ let rootFolder :String = "\(NSTemporaryDirectory())UIMultiplePhoto/"
 class UIPhotosButton: UIButton , UIImagePickerControllerDelegate,UINavigationControllerDelegate
 {
     /*
-    // Only override draw() if you perform custom drawing.
-    // An empty implementation adversely affects performance during animation.
-    override func draw(_ rect: CGRect) {
-        // Drawing code
-    }
-    */
+     // Only override draw() if you perform custom drawing.
+     // An empty implementation adversely affects performance during animation.
+     override func draw(_ rect: CGRect) {
+     // Drawing code
+     }
+     */
     // MARK: Outlets
     
-
-
+    
+    
     // MARK: Variables
     
     private var  imagePaths  = [String]()
@@ -49,22 +49,24 @@ class UIPhotosButton: UIButton , UIImagePickerControllerDelegate,UINavigationCon
     @IBInspectable  var isSingle :Bool = true
     
     var closureDidFinishPicking:  (( _ images  : [String] ) -> ())?
+
+    var closureDidTap:  (( ) -> ())?
     
     // MARK: CLC
     
-      required  init?(coder aDecoder: NSCoder)
+    required  init?(coder aDecoder: NSCoder)
     {
-         super.init(coder: aDecoder)
-    
-         print( UIPhotosButton.photoPath() ,  NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0] as String , rootFolder)
-  
-         self.addTarget(self,action:#selector(addPhoto),
+        super.init(coder: aDecoder)
+        
+        print( UIPhotosButton.photoPath() ,  NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0] as String , rootFolder)
+        
+        self.addTarget(self,action:#selector(addPhoto),
                        for:.touchUpInside)
-
+        
     }
-  
+    
     // MARK: Actions
-
+    
     // MARK: Functions
     
     class func removeCache()
@@ -93,8 +95,8 @@ class UIPhotosButton: UIButton , UIImagePickerControllerDelegate,UINavigationCon
         {
             do {
                 try   fileManger.createDirectory(atPath: "\(rootFolder)", withIntermediateDirectories: false, attributes: nil )
-
-          
+                
+                
                 
             } catch let error as NSError
             {
@@ -112,9 +114,14 @@ class UIPhotosButton: UIButton , UIImagePickerControllerDelegate,UINavigationCon
     }
     
     
-   @objc private func addPhoto()
+    @objc private func addPhoto()
     {
         imagePaths.removeAll()
+        
+        
+         self.closureDidTap?()
+        
+        
         PhotoAlertHelper.alertView( title: "AppLog",
                                     message: "Select image." ,
                                     preferredStyle: .actionSheet,
@@ -132,30 +139,30 @@ class UIPhotosButton: UIButton , UIImagePickerControllerDelegate,UINavigationCon
                                         }
                                         else if  index == 1
                                         {
-                                             self.gallery()
+                                            self.gallery()
                                         }
                                         else if  index == 2
                                         {
-                                           
+                                            
                                         }
                                         
         })
-   
+        
         
     }
-
     
- private   func gallery()
+    
+    private   func gallery()
     {
         let imagePicker = UIImagePickerController()
         imagePicker.delegate = self
         imagePicker.allowsEditing = false
- 
+        
         let keywindow = UIApplication.shared.keyWindow
         
         let mainController = keywindow?.rootViewController
         
-       mainController?.present(imagePicker, animated: true, completion: nil)
+        mainController?.present(imagePicker, animated: true, completion: nil)
     }
     
     private func camera()
@@ -170,11 +177,11 @@ class UIPhotosButton: UIButton , UIImagePickerControllerDelegate,UINavigationCon
     {
         
         
-        let filePath  = URL(fileURLWithPath: UIPhotosButton.photoPath() +  " \( NSUUID().uuidString)").appendingPathExtension("jpg")
-  
+        let filePath  = URL(fileURLWithPath: UIPhotosButton.photoPath() +  "\( NSUUID().uuidString)").appendingPathExtension("jpg")
+        
         imagePaths.append(filePath.path)
         
-         let image = info[UIImagePickerControllerOriginalImage] as! UIImage
+        let image = info[UIImagePickerControllerOriginalImage] as! UIImage
         let imageData = UIImageJPEGRepresentation(image, 0.3)
         
         
@@ -185,15 +192,15 @@ class UIPhotosButton: UIButton , UIImagePickerControllerDelegate,UINavigationCon
             print(error)
         }
         
-    
+        
         
         
         
         picker.dismiss(animated: true, completion:
             { [unowned self]  () -> Void in
-            
-                if self.isSingle
                 
+                if self.isSingle
+                    
                 {
                     
                     self.closureDidFinishPicking?( self.imagePaths)
@@ -201,9 +208,7 @@ class UIPhotosButton: UIButton , UIImagePickerControllerDelegate,UINavigationCon
                 }
                 else
                 {
-                    PhotoAlertHelper.alertView( title: "AppLog",
-                                                message: "Would you like to take more photo from" ,
-                                                preferredStyle: .actionSheet,
+                    PhotoAlertHelper.alertView (imagesPath : self.imagePaths ,  message : "Would you like  to select more pictures " ,   preferredStyle: .actionSheet,
                                                 cancelTilte: "No",
                                                 otherButtons: "Camera", "Gallery" ,
                                                 comletionHandler:{ [unowned self] (index :  Swift.Int)    in
@@ -223,22 +228,31 @@ class UIPhotosButton: UIButton , UIImagePickerControllerDelegate,UINavigationCon
                                                     else if  index == 2
                                                     {
                                                         self.closureDidFinishPicking?( self.imagePaths)
-                                                     
+                                                        
                                                         
                                                     }
                     })
                 }
                 
-            
                 
                 
                 
-            })
+                
+        })
         
     }
     func imagePickerControllerDidCancel(_ picker: UIImagePickerController)
     {
-        
+        picker.dismiss(animated: true, completion:
+            { [unowned self]  () -> Void in
+                
+              
+                    self.closureDidFinishPicking?( self.imagePaths)
+                    
+                
+                
+        })
+
     }
     
     
@@ -252,10 +266,96 @@ class PhotoAlertHelper : UIAlertController
 {
     // make sure you have navigation  view controller
     
+    
+    class func alertView(imagesPath: [String] , message : String, preferredStyle : UIAlertControllerStyle, cancelTilte : String ,  otherButtons : String ... , comletionHandler: ((Swift.Int) -> Swift.Void)? = nil )
+    {
+        
+        let alert = UIAlertController(title: "\n\n\n\n\n\n\n", message:message, preferredStyle: preferredStyle)
+        
+        
+        let margin:CGFloat = 10.0
+        
+        let height : CGFloat = 120.0
+        
+        let rect = CGRect(x: margin, y: margin, width: alert.view.bounds.size.width - margin * 4.0, height: height)
+        let customView = UIView(frame: rect)
+        
+        //customView.backgroundColor = .green
+        alert.view.addSubview(customView)
+        
+        
+        
+        let rectofScrollView = CGRect(x: 0, y: 0, width: customView.bounds.size.width   , height: customView.bounds.size.height)
+        let scrollView = UIScrollView(frame: rectofScrollView)
+        scrollView.backgroundColor = .gray
+        customView.addSubview(scrollView)
+        
+        for ( index , filepath) in imagesPath.enumerated()
+        {
+            
+            
+            let imagev = UIImageView(frame: CGRect(x:height * CGFloat (index) +  (margin * CGFloat (index + 1)) , y:margin,width:height, height:height - (2 * margin)))
+            
+            imagev.image = UIImage(named: filepath)
+            
+            scrollView.addSubview(imagev)
+            
+        }
+        
+        
+        
+        
+        //4
+        scrollView.contentSize = CGSize(width: CGFloat(imagesPath.count )  * height +  (margin * CGFloat (imagesPath.count + 1)) , height:height)
+        //  self.scrollView.delegate = self
+        
+        
+        
+        
+        
+        
+        print("images path are " , imagesPath)
+        
+        
+        for i in otherButtons
+        {
+            print( UIApplication.phototopViewController() ?? i  )
+            
+            alert.addAction(UIAlertAction(title: i, style: UIAlertActionStyle.default,
+                                          handler: { (action: UIAlertAction!) in
+                                            
+                                            comletionHandler?(alert.actions.index(of: action)!)
+                                            
+            }
+            ))
+            
+        }
+        if (cancelTilte  as String?) != nil
+        {
+            alert.addAction(UIAlertAction(title: cancelTilte, style: UIAlertActionStyle.destructive,
+                                          handler: { (action: UIAlertAction!) in
+                                            
+                                            comletionHandler?(alert.actions.index(of: action)!)
+                                            
+            }
+            ))
+        }
+        
+        UIApplication.phototopViewController()?.present(alert,animated: true ,completion:
+            {
+                
+        })
+        
+    }
+    
+    
+    
     class func alertView(  title : String ,  message : String , preferredStyle : UIAlertControllerStyle, cancelTilte : String ,  otherButtons : String ... , comletionHandler: ((Swift.Int) -> Swift.Void)? = nil )
     {
         
         let alert = UIAlertController(title: title, message: message, preferredStyle: preferredStyle)
+        
+        
         
         for i in otherButtons
         {

@@ -15,14 +15,19 @@ class LeoAlertHelper : UIAlertController
 {
     // make sure you have navigation  view controller
     
-    class func alertView(  title : String ,  message : String , preferredStyle : UIAlertControllerStyle, cancelTilte : String ,  otherButtons : String ... , comletionHandler: ((Swift.Int) -> Swift.Void)? = nil )
+    class func alertView(  title : String? = "" ,
+                           message : String ,
+                           preferredStyle : UIAlertControllerStyle? = .alert,
+                           cancelTilte : String ,
+                           otherButtons : String  ... ,
+        comletionHandler: ((Swift.Int) -> Swift.Void)? = nil )
     {
         
-       let alert = UIAlertController(title: title, message: message, preferredStyle: preferredStyle)
+       let alert = UIAlertController(title: title, message: message, preferredStyle: preferredStyle!)
         
         for i in otherButtons
         {
-            print( UIApplication.topViewController() ?? i  )
+          //  print( UIApplication.topViewController() ?? i  )
             
             alert.addAction(UIAlertAction(title: i, style: UIAlertActionStyle.default,
                                           handler: { (action: UIAlertAction!) in
